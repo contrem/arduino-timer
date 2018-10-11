@@ -27,7 +27,7 @@ void loop() {
 Make a function to call when the *Timer* expires
 ```cpp
 bool function_to_call(void *argument /* optional argument given to in/at/every */) {
-    return false; // to keep the timer active - true removes it (for timer.every())
+    return true; // to repeat the action - false to stop
 }
 ```
 
@@ -104,7 +104,7 @@ auto timer = timer_create_default(); // create a timer with default settings
 
 bool toggle_led(void *) {
   digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN)); // toggle the LED
-  return false; // stop repeating? false
+  return true; // keep timer active? true
 }
 
 void setup() {

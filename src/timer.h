@@ -101,7 +101,7 @@ class Timer {
                 if (!task->repeat) remove(task);
                 else task->start = t;
 
-                if (handler(opaque)) remove(task);
+                if (!handler(opaque)) remove(task);
             }
         }
     }

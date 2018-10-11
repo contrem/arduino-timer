@@ -12,13 +12,13 @@ auto timer = timer_create_default(); // create a timer with default settings
 
 bool toggle_led(void *) {
   digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN)); // toggle the LED
-  return false; // stop repeating? false
+  return true; // repeat? true
 }
 
 bool print_message(void *) {
   Serial.print("print_message: Called at: ");
   Serial.println(millis());
-  return false; // stop repeating? false
+  return true; // repeat? true
 }
 
 void setup() {

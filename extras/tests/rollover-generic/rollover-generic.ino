@@ -23,13 +23,13 @@ void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
     _timer.every(1, [](void *) -> bool {
         ++_millis; // increase _millis every millisecond
-        return false;
+        return true;
     });
 
     // should blink the led every second, regardless of wrapping
     timer.every(1000, [](void *) -> bool {
         digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-        return false;
+        return true;
     });
 }
 

@@ -11,7 +11,7 @@ Timer<1, micros> timer; // create a timer with 1 task and microsecond resolution
 
 bool toggle_led(void *) {
   digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN)); // toggle the LED
-  return false; // stop repeating? false
+  return true; // repeat? true
 }
 
 void setup() {
