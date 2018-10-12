@@ -32,8 +32,8 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef _TIMER_H__
-#define _TIMER_H__
+#ifndef _CM_ARDUINO_TIMER_H__
+#define _CM_ARDUINO_TIMER_H__
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include <Arduino.h>
