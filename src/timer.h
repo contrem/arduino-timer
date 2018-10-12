@@ -89,9 +89,9 @@ class Timer {
     tick(unsigned long t)
     {
         for (size_t i = 0; i < max_tasks; ++i) {
-            struct task *task = &tasks[i];
+            struct task * const task = &tasks[i];
             const handler_t handler = task->handler;
-            void *opaque = task->opaque;
+            void * const opaque = task->opaque;
             const unsigned long start = task->start,
                                 expires = task->expires;
             const unsigned long duration = t - start;
@@ -132,7 +132,7 @@ class Timer {
     next_task_slot()
     {
         for (size_t i = 0; i < max_tasks; ++i) {
-            struct task *slot = &tasks[i];
+            struct task * const slot = &tasks[i];
             if (slot->handler == NULL) return slot;
         }
 
@@ -144,7 +144,7 @@ class Timer {
     add_task(unsigned long start, unsigned long expires,
              handler_t h, void *opaque, bool repeat = 0)
     {
-        struct task *slot = next_task_slot();
+        struct task * const slot = next_task_slot();
 
         if (!slot) return NULL;
 
