@@ -90,18 +90,13 @@ class Timer {
     {
         for (size_t i = 0; i < max_tasks; ++i) {
             struct task * const task = &tasks[i];
-            const handler_t handler = task->handler;
-            void * const opaque = task->opaque;
-            const unsigned long start = task->start,
-                                expires = task->expires;
-            const unsigned long duration = t - start;
+            const unsigned long duration = t - task->start;
 
-            if (handler && duration >= expires) {
+            if (task->handler && duration >= task->expires) {
+                task->repeat = task->handler(task->opaque) && task->repeat;
 
-                if (!task->repeat) remove(task);
-                else task->start = t;
-
-                if (!handler(opaque)) remove(task);
+                if (task->repeat) task->start = t;
+                else remove(task);
             }
         }
     }
