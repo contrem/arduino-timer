@@ -32,8 +32,8 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef _TIMER_H__
-#define _TIMER_H__
+#ifndef _CM_ARDUINO_TIMER_H__
+#define _CM_ARDUINO_TIMER_H__
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include <Arduino.h>
@@ -89,19 +89,14 @@ class Timer {
     tick(unsigned long t)
     {
         for (size_t i = 0; i < max_tasks; ++i) {
-            struct task *task = &tasks[i];
-            const handler_t handler = task->handler;
-            void *opaque = task->opaque;
-            const unsigned long start = task->start,
-                                expires = task->expires;
-            const unsigned long duration = t - start;
+            struct task * const task = &tasks[i];
+            const unsigned long duration = t - task->start;
 
-            if (handler && duration >= expires) {
+            if (task->handler && duration >= task->expires) {
+                task->repeat = task->handler(task->opaque) && task->repeat;
 
-                if (!task->repeat) remove(task);
-                else task->start = t;
-
-                if (handler(opaque)) remove(task);
+                if (task->repeat) task->start = t;
+                else remove(task);
             }
         }
     }
@@ -132,7 +127,7 @@ class Timer {
     next_task_slot()
     {
         for (size_t i = 0; i < max_tasks; ++i) {
-            struct task *slot = &tasks[i];
+            struct task * const slot = &tasks[i];
             if (slot->handler == NULL) return slot;
         }
 
@@ -144,7 +139,7 @@ class Timer {
     add_task(unsigned long start, unsigned long expires,
              handler_t h, void *opaque, bool repeat = 0)
     {
-        struct task *slot = next_task_slot();
+        struct task * const slot = next_task_slot();
 
         if (!slot) return NULL;
 

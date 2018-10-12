@@ -20,7 +20,7 @@ void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
     timer.every(1000, [](void *) -> bool {
         digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-        return false;
+        return true;
     });
 }
 

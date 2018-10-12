@@ -19,14 +19,14 @@ Timer<1, micros> u_timer;
 
 bool toggle_led(void *) {
   digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN)); // toggle the LED
-  return false; // stop repeating? false
+  return true; // repeat? true
 }
 
 bool print_message(void *msg) {
   const char *m = (const char *)msg;
   Serial.print("print_message: ");
   Serial.println(m);
-  return false; // stop repeating? false
+  return true; // repeat? true
 }
 
 size_t repeat_count = 1;
@@ -38,7 +38,7 @@ bool repeat_x_times(void *opaque) {
   Serial.print("/");
   Serial.println(limit);
 
-  return ++repeat_count > limit; // remove this task after limit reached
+  return ++repeat_count <= limit; // remove this task after limit reached
 }
 
 void setup() {
