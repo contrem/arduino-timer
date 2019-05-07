@@ -52,17 +52,18 @@ template <
 class Timer {
   public:
 
+    typedef void * Task; /* public task handle */
     typedef bool (*handler_t)(void *opaque); /* task handler func signature */
 
     /* Calls handler with opaque as argument in delay units of time */
-    bool
+    Task
     in(unsigned long delay, handler_t h, void *opaque = NULL)
     {
         return add_task(time_func(), delay, h, opaque);
     }
 
     /* Calls handler with opaque as argument at time */
-    bool
+    Task
     at(unsigned long time, handler_t h, void *opaque = NULL)
     {
         const unsigned long now = time_func();
@@ -70,10 +71,21 @@ class Timer {
     }
 
     /* Calls handler with opaque as argument every interval units of time */
-    bool
+    Task
     every(unsigned long interval, handler_t h, void *opaque = NULL)
     {
         return add_task(time_func(), interval, h, opaque, interval);
+    }
+
+    /* Cancel the timer task */
+    void
+    cancel(Task &task)
+    {
+        struct task * const t = static_cast<struct task * const>(task);
+
+        if (t) remove(t);
+
+        task = NULL;
     }
 
     /* Ticks the timer forward - call this function in loop() */
