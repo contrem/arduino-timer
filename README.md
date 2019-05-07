@@ -49,6 +49,12 @@ timer.every(interval, function_to_call);
 timer.every(interval, function_to_call, argument); // with argument
 ```
 
+To **cancel** a *Task*
+```cpp
+auto task = timer.in(delay, function_to_call);
+timer.cancel(task);
+```
+
 Be fancy with **lambdas**
 ```cpp
 timer.in(1000, [](void*) -> bool { return false; });
@@ -76,13 +82,19 @@ bool handler(void *argument);
 void tick();
 
 /* Calls handler with opaque as argument in delay units of time */
-bool in(unsigned long delay, handler_t handler, void *opaque = NULL);
+Timer<>::Task
+in(unsigned long delay, handler_t handler, void *opaque = NULL);
 
 /* Calls handler with opaque as argument at time */
-bool at(unsigned long time, handler_t handler, void *opaque = NULL);
+Timer<>::Task
+at(unsigned long time, handler_t handler, void *opaque = NULL);
 
 /* Calls handler with opaque as argument every interval units of time */
-bool every(unsigned long interval, handler_t handler, void *opaque = NULL);
+Timer<>::Task
+every(unsigned long interval, handler_t handler, void *opaque = NULL);
+
+/* Cancel a timer task */
+void cancel(Timer<>::Task &task);
 ```
 
 ### Installation
@@ -129,7 +141,9 @@ Currently only a software timer. Any blocking code delaying *timer*.**tick()** w
 
 The library does not do any dynamic memory allocation.
 
-The number of concurrent tasks is a compile time constant, meaning there is a limit to the number of concurrent tasks. The **in / at / every** functions return **false** if the *Timer* is full.
+The number of concurrent tasks is a compile time constant, meaning there is a limit to the number of concurrent tasks. The **in / at / every** functions return **NULL** if the *Timer* is full.
+
+A *Task* value is valid only for the timer that created it, and only for the lifetime of that timer.
 
 Change the number of concurrent tasks using the *Timer* constructors. Save memory by reducing the number, increase memory use by having more. The default is **TIMER_MAX_TASKS** which is currently 16.
 
