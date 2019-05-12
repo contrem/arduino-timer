@@ -52,14 +52,14 @@ template <
 class Timer {
   public:
 
-    typedef void * Task; /* public task handle */
+    typedef uintptr_t Task; /* public task handle */
     typedef bool (*handler_t)(void *opaque); /* task handler func signature */
 
     /* Calls handler with opaque as argument in delay units of time */
     Task
     in(unsigned long delay, handler_t h, void *opaque = NULL)
     {
-        return add_task(time_func(), delay, h, opaque);
+        return task_id(add_task(time_func(), delay, h, opaque));
     }
 
     /* Calls handler with opaque as argument at time */
@@ -67,23 +67,30 @@ class Timer {
     at(unsigned long time, handler_t h, void *opaque = NULL)
     {
         const unsigned long now = time_func();
-        return add_task(now, time - now, h, opaque);
+        return task_id(add_task(now, time - now, h, opaque));
     }
 
     /* Calls handler with opaque as argument every interval units of time */
     Task
     every(unsigned long interval, handler_t h, void *opaque = NULL)
     {
-        return add_task(time_func(), interval, h, opaque, interval);
+        return task_id(add_task(time_func(), interval, h, opaque, interval));
     }
 
     /* Cancel the timer task */
     void
     cancel(Task &task)
     {
-        struct task * const t = static_cast<struct task * const>(task);
+        if (!task) return;
 
-        if (t) remove(t);
+        for (size_t i = 0; i < max_tasks; ++i) {
+            struct task * const t = &tasks[i];
+
+            if (t->handler && (t->id ^ task) == (uintptr_t)t) {
+                remove(t);
+                break;
+            }
+        }
 
         task = NULL;
     }
@@ -129,12 +136,15 @@ class Timer {
 
   private:
 
+    size_t ctr;
+
     struct task {
         handler_t handler; /* task handler callback func */
         void *opaque; /* argument given to the callback handler */
         unsigned long start,
-                      expires, /* when the task expires */
-                      repeat; /* repeat task */
+                      expires; /* when the task expires */
+        size_t repeat, /* repeat task */
+               id;
     } tasks[max_tasks];
 
     inline
@@ -146,6 +156,16 @@ class Timer {
         task->start = 0;
         task->expires = 0;
         task->repeat = 0;
+        task->id = 0;
+    }
+
+    inline
+    Task
+    task_id(const struct task * const t)
+    {
+        const Task id = (uintptr_t)t;
+
+        return id ? id ^ t->id : id;
     }
 
     inline
@@ -169,6 +189,9 @@ class Timer {
 
         if (!slot) return NULL;
 
+        if (++ctr == 0) ++ctr; // overflow
+
+        slot->id = ctr;
         slot->handler = h;
         slot->opaque = opaque;
         slot->start = start;
