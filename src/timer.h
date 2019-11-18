@@ -83,7 +83,7 @@ class Timer {
         tick(time_func());
     }
 
-    /* Ticks the timer forward - call this function in loop() */
+    /* DEPRECATED */
     inline
     void
     tick(unsigned long t)
