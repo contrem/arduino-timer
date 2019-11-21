@@ -80,7 +80,21 @@ class Timer {
     void
     tick()
     {
-        tick(time_func());
+        for (size_t i = 0; i < max_tasks; ++i) {
+            struct task * const task = &tasks[i];
+
+            if (task->handler) {
+                const unsigned long t = time_func();
+                const unsigned long duration = t - task->start;
+
+                if (duration >= task->expires) {
+                    task->repeat = task->handler(task->opaque) && task->repeat;
+
+                    if (task->repeat) task->start = t;
+                    else remove(task);
+                }
+            }
+        }
     }
 
     /* Ticks the timer forward - call this function in loop() */
