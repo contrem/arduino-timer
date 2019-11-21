@@ -97,7 +97,7 @@ class Timer {
         }
     }
 
-    /* Ticks the timer forward - call this function in loop() */
+    /* DEPRECATED */
     inline
     void
     tick(unsigned long t)
