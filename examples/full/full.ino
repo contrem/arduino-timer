@@ -49,22 +49,22 @@ void setup() {
   timer.every(500, toggle_led);
 
   // call the repeat_x_times function every 1000 millis (1 second)
-  timer.every(1000, repeat_x_times, 10);
+  timer.every(1000, repeat_x_times, (void *)10);
 
   // call the print_message function every 1000 millis (1 second),
   // passing it an argument string
-  timer.every(1000, print_message, "called every second");
+  timer.every(1000, print_message, (void *)"called every second");
 
   // call the print_message function in five seconds
-  timer.in(5000, print_message, "delayed five seconds");
+  timer.in(5000, print_message, (void *)"delayed five seconds");
 
   // call the print_message function at time + 10 seconds
-  timer.at(millis() + 10000, print_message, "call at millis() + 10 seconds");
+  timer.at(millis() + 10000, print_message, (void *)"call at millis() + 10 seconds");
 
   // call print_message in 2 seconds, but with microsecond resolution
-  u_timer.in(2000000, print_message, "delayed two seconds using microseconds");
+  u_timer.in(2000000, print_message, (void *)"delayed two seconds using microseconds");
 
-  if (!u_timer.in(5000, print_message, "never printed")) {
+  if (!u_timer.in(5000, print_message, (void *)"never printed")) {
   /* this fails because we created u_timer with only 1 concurrent task slot */
     Serial.println("Failed to add microsecond event - timer full");
   }
