@@ -72,8 +72,8 @@ Timer<10, micros> timer; // timer with 10 task slots and microsecond resolution
 bool handler(void *argument);
 
 /* Timer Methods */
-/* Ticks the timer forward - call this function in loop() */
-void tick();
+/* Ticks the timer forward, returns the ticks until next event, or 0 if none */
+unsigned int tick(); // call this function in loop()
 
 /* Calls handler with opaque as argument in delay units of time */
 bool in(unsigned long delay, handler_t handler, void *opaque = NULL);
