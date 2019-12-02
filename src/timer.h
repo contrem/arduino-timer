@@ -97,24 +97,6 @@ class Timer {
         }
     }
 
-    /* DEPRECATED */
-    inline
-    void
-    tick(unsigned long t)
-    {
-        for (size_t i = 0; i < max_tasks; ++i) {
-            struct task * const task = &tasks[i];
-            const unsigned long duration = t - task->start;
-
-            if (task->handler && duration >= task->expires) {
-                task->repeat = task->handler(task->opaque) && task->repeat;
-
-                if (task->repeat) task->start = t;
-                else remove(task);
-            }
-        }
-    }
-
   private:
 
     struct task {
