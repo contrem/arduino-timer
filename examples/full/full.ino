@@ -6,6 +6,7 @@
  *  - Setting a different number of tasks with microsecond resolution
  *  - disabling a repeated function
  *  - running a function after a delay
+ *  - cancelling a task
  *
  */
 
@@ -60,6 +61,10 @@ void setup() {
 
   // call the print_message function at time + 10 seconds
   timer.at(millis() + 10000, print_message, (void *)"call at millis() + 10 seconds");
+
+  // call the toggle_led function every 500 millis (half second)
+  auto task = timer.every(500, toggle_led);
+  timer.cancel(task); // this task is now cancelled, and will not run
 
   // call print_message in 2 seconds, but with microsecond resolution
   u_timer.in(2000000, print_message, (void *)"delayed two seconds using microseconds");
