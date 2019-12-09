@@ -92,7 +92,7 @@ class Timer {
             }
         }
 
-        task = NULL;
+        task = (Task)NULL;
     }
 
     /* Ticks the timer forward - call this function in loop() */
@@ -152,7 +152,7 @@ class Timer {
     Task
     task_id(const struct task * const t)
     {
-        const Task id = (uintptr_t)t;
+        const Task id = (Task)t;
 
         return id ? id ^ t->id : id;
     }
