@@ -96,9 +96,11 @@ class Timer {
     }
 
     /* Ticks the timer forward - call this function in loop() */
-    void
+    unsigned long
     tick()
     {
+        unsigned long ticks = (unsigned long)-1;
+
         for (size_t i = 0; i < max_tasks; ++i) {
             struct task * const task = &tasks[i];
 
@@ -111,9 +113,14 @@ class Timer {
 
                     if (task->repeat) task->start = t;
                     else remove(task);
+                } else {
+                    const unsigned long remaining = task->expires - duration;
+                    ticks = remaining < ticks ? remaining : ticks;
                 }
             }
         }
+
+        return ticks == (unsigned long)-1 ? 0 : ticks;
     }
 
     /* DEPRECATED */
