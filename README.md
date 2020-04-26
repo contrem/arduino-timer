@@ -26,7 +26,8 @@ void loop() {
 
 Make a function to call when the *Timer* expires
 ```cpp
-bool function_to_call(void *argument /* optional argument given to in/at/every */) {
+bool function_to_call(void *argument /* optional argument given to in/at/every */
+                      long overdue_by /* difference between the desired and requested time */) {
     return true; // to repeat the action - false to stop
 }
 ```
@@ -57,8 +58,8 @@ timer.cancel(task);
 
 Be fancy with **lambdas**
 ```cpp
-timer.in(1000, [](void*) -> bool { return false; });
-timer.in(1000, [](void *argument) -> bool { return argument; }, argument);
+timer.in(1000, [](void*, long) -> bool { return false; });
+timer.in(1000, [](void *argument, long overdue_by) -> bool { return argument; }, argument);
 ```
 
 ### API
@@ -75,7 +76,7 @@ Timer<10> timer; // Timer with 10 task slots
 Timer<10, micros> timer; // timer with 10 task slots and microsecond resolution
 
 /* Signature for handler functions */
-bool handler(void *argument);
+bool handler(void *argument, long overdue_by);
 
 /* Timer Methods */
 /* Ticks the timer forward, returns the ticks until next event, or 0 if none */
@@ -93,8 +94,8 @@ at(unsigned long time, handler_t handler, void *opaque = NULL);
 Timer<>::Task
 every(unsigned long interval, handler_t handler, void *opaque = NULL);
 
-/* Cancel a timer task */
-void cancel(Timer<>::Task &task);
+/* Cancel a timer task. returns true if uncompleted task was found. */
+bool cancel(Timer<>::Task task);
 ```
 
 ### Installation
@@ -114,7 +115,7 @@ The simplest example, blinking an LED every second *(from examples/blink)*:
 
 auto timer = timer_create_default(); // create a timer with default settings
 
-bool toggle_led(void *) {
+bool toggle_led(void *, long) {
   digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN)); // toggle the LED
   return true; // keep timer active? true
 }
@@ -141,7 +142,7 @@ Currently only a software timer. Any blocking code delaying *timer*.**tick()** w
 
 The library does not do any dynamic memory allocation.
 
-The number of concurrent tasks is a compile time constant, meaning there is a limit to the number of concurrent tasks. The **in / at / every** functions return **NULL** if the *Timer* is full.
+The number of concurrent tasks is a compile time constant, meaning there is a limit to the number of concurrent tasks. The **in / at / every** functions return **0** if the *Timer* is full.
 
 A *Task* value is valid only for the timer that created it, and only for the lifetime of that timer.
 

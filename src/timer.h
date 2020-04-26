@@ -42,152 +42,281 @@
 #endif
 
 #ifndef TIMER_MAX_TASKS
-    #define TIMER_MAX_TASKS 0x10
+#define TIMER_MAX_TASKS 0x10
 #endif
 
-template <
-    size_t max_tasks = TIMER_MAX_TASKS, /* max allocated tasks */
-    unsigned long (*time_func)() = millis /* time function for timer */
->
-class Timer {
-  public:
+//#define TIMER_DEBUG
 
-    typedef uintptr_t Task; /* public task handle */
-    typedef bool (*handler_t)(void *opaque); /* task handler func signature */
+template <
+    size_t max_tasks = TIMER_MAX_TASKS,   /* max allocated tasks */
+    unsigned long (*time_func)() = millis /* time function for timer */
+    >
+class Timer
+{
+public:
+    Timer()
+    {
+        // initialize the min heap references
+        for (size_t i = 0; i < max_tasks; ++i)
+        {
+            heap[i] = i;
+        }
+    }
+
+    typedef unsigned long Task;                                /* public task handle */
+    typedef bool (*handler_t)(void *opaque, long overdue_by); /* task handler func signature */
 
     /* Calls handler with opaque as argument in delay units of time */
     Task
     in(unsigned long delay, handler_t h, void *opaque = NULL)
     {
-        return task_id(add_task(time_func(), delay, h, opaque));
+        return add_task(h, opaque, time_func() + delay);
     }
 
     /* Calls handler with opaque as argument at time */
     Task
     at(unsigned long time, handler_t h, void *opaque = NULL)
     {
-        const unsigned long now = time_func();
-        return task_id(add_task(now, time - now, h, opaque));
+        return add_task(h, opaque, time);
     }
 
     /* Calls handler with opaque as argument every interval units of time */
     Task
     every(unsigned long interval, handler_t h, void *opaque = NULL)
     {
-        return task_id(add_task(time_func(), interval, h, opaque, interval));
+        return add_task(h, opaque, time_func() + interval, interval);
     }
 
     /* Cancel the timer task */
-    void
-    cancel(Task &task)
+    bool
+    cancel(Task task)
     {
-        if (!task) return;
-
-        for (size_t i = 0; i < max_tasks; ++i) {
-            struct task * const t = &tasks[i];
-
-            if (t->handler && (t->id ^ task) == (uintptr_t)t) {
-                remove(t);
-                break;
+        for (size_t i = 0; i < ctr; i++)
+        {
+            if (tasks[heap[i]].id == task)
+            {
+                del_task(i);
+                return true;
             }
         }
-
-        task = (Task)NULL;
+        return false;
     }
 
     /* Ticks the timer forward - call this function in loop() */
     unsigned long
     tick()
     {
-        unsigned long ticks = (unsigned long)-1;
+        while (ctr)
+        {
+#ifdef TIMER_DEBUG
+            dump(true);
+#endif
+            const unsigned long now = time_func();
+            // get the most pressing task
+            struct task *task = &tasks[heap[0]];
+            // calculate how much time is left
+            const long remaining = task->expires - now;
+            if (remaining > 0)
+            {
+#ifdef TIMER_DEBUG
+                // slow the output a little bit
+                delay(min(200, remaining));
+#endif
+                // not yet. This is the hot path
+                return remaining;
+            }
 
-        for (size_t i = 0; i < max_tasks; ++i) {
-            struct task * const task = &tasks[i];
+            // run the handler for who knows how long
+            const bool again = task->handler(task->opaque, -remaining);
 
-            if (task->handler) {
-                const unsigned long t = time_func();
-                const unsigned long duration = t - task->start;
-
-                if (duration >= task->expires) {
-                    task->repeat = task->handler(task->opaque) && task->repeat;
-
-                    if (task->repeat) task->start = t;
-                    else remove(task);
-                } else {
-                    const unsigned long remaining = task->expires - duration;
-                    ticks = remaining < ticks ? remaining : ticks;
+            if (task->repeat && again)
+            {
+                // reschedule
+                while (task->expires <= time_func())
+                {
+                    // increament the expires date to avoid drift because
+                    // of time spent in handler
+                    task->expires = task->expires + task->repeat;
                 }
+                bubbleDown(0);
+            }
+            else
+            {
+                del_task(0);
             }
         }
-
-        return ticks == (unsigned long)-1 ? 0 : ticks;
+        return 0;
     }
 
-  private:
-
+private:
+    /* count of tasks in the heap */
     size_t ctr;
+    /* each task is given a unique id */
+    unsigned long max_id = 1;
+    /*
+     index in to tasks array in min heap order. tasks[heap[0]] is always the
+     soonest task to expire
+    */
+    size_t heap[max_tasks];
 
-    struct task {
-        handler_t handler; /* task handler callback func */
-        void *opaque; /* argument given to the callback handler */
-        unsigned long start,
-                      expires; /* when the task expires */
-        size_t repeat, /* repeat task */
-               id;
+    struct task
+    {
+        handler_t handler;     /* task handler callback func */
+        void *opaque;          /* argument given to the callback handler */
+        Task id;               /* unique id */
+        unsigned long expires; /* when the task expires */
+        unsigned long repeat;  /* repeat task */
     } tasks[max_tasks];
 
-    inline
+#ifdef TIMER_DEBUG
     void
-    remove(struct task *task)
+    dump(bool check)
     {
+        unsigned long now = time_func();
+        Serial.print("\ttime:");
+        Serial.print(now);
+        Serial.print(" count:");
+        Serial.print(ctr);
+        Serial.print(" heap:[");
+        bool valid = true;
+        for (int i = 0; i < max_tasks; i++)
+        {
+            if (i == ctr)
+                Serial.print("___ ");
+            size_t idx = heap[i];
+            struct task *task = &tasks[idx];
+            Serial.print(idx);
+            Serial.print(":");
+            long remaining = i < ctr ? task->expires - now : task->expires;
+            Serial.print(remaining);
+            Serial.print(" ");
+
+            int p = (i - 1) / 2;
+            if (i < ctr && i && tasks[heap[p]].expires > tasks[idx].expires)
+                valid = false;
+        }
+        Serial.println(valid ? "]" : check ? "] ----- ERROR" : "]*");
+    }
+#endif
+
+    inline Task
+    add_task(handler_t handler, void *opaque, unsigned long expires, unsigned long repeat = 0)
+    {
+        if (ctr >= max_tasks)
+            return 0;
+
+#ifdef TIMER_DEBUG
+        Serial.print("add in ");
+        Serial.print(expires - time_func());
+        Serial.print(" every ");
+        Serial.println(repeat);
+#endif
+
+        // tac the new task on to the end of the heap
+        const size_t slot = ctr++;
+        struct task *task = &tasks[heap[slot]];
+
+        task->id = max_id++;
+        task->handler = handler;
+        task->opaque = opaque;
+        task->expires = expires;
+        task->repeat = repeat;
+
+        // bubble up the min heap to the right place
+        bubbleUp(slot);
+
+        return task->id;
+    }
+
+    inline void
+    del_task(size_t slot)
+    {
+        struct task *task = &tasks[heap[slot]];
+        task->id = 0;
         task->handler = NULL;
         task->opaque = NULL;
-        task->start = 0;
         task->expires = 0;
         task->repeat = 0;
-        task->id = 0;
+        // put task in free pool by exchanging it with far future task and
+        // decrementing the count
+        swap(slot, --ctr);
+        // check invariants
+        bubbleDown(slot);
     }
 
-    inline
-    Task
-    task_id(const struct task * const t)
+    inline void
+    bubbleUp(size_t slot)
     {
-        const Task id = (Task)t;
-
-        return id ? id ^ t->id : id;
-    }
-
-    inline
-    struct task *
-    next_task_slot()
-    {
-        for (size_t i = 0; i < max_tasks; ++i) {
-            struct task * const slot = &tasks[i];
-            if (slot->handler == NULL) return slot;
+#ifdef TIMER_DEBUG
+        Serial.print("\tup ");
+        Serial.println(slot);
+        dump(false);
+#endif
+        size_t parent = (slot - 1) / 2;
+        while (slot && tasks[heap[parent]].expires > tasks[heap[slot]].expires)
+        {
+            swap(slot, parent);
+            slot = parent;
+            parent = (slot - 1) / 2;
         }
-
-        return NULL;
     }
 
-    inline
-    struct task *
-    add_task(unsigned long start, unsigned long expires,
-             handler_t h, void *opaque, bool repeat = 0)
+    inline void
+    bubbleDown(size_t slot)
     {
-        struct task * const slot = next_task_slot();
+#ifdef TIMER_DEBUG
+        Serial.print("\tdown ");
+        Serial.println(slot);
+        dump(false);
+#endif
+        bool done = false;
+        while (!done)
+        {
+            if (slot >= ctr)
+            {
+                return;
+            }
+            size_t smallest = slot;
 
-        if (!slot) return NULL;
+            const size_t left = 2 * slot + 1;
+            if (left < ctr && tasks[heap[left]].expires < tasks[heap[smallest]].expires)
+            {
+                // left side is expiring sooner
+                smallest = left;
+            }
 
-        if (++ctr == 0) ++ctr; // overflow
+            const size_t right = 2 * slot + 2;
+            if (right < ctr && tasks[heap[right]].expires < tasks[heap[smallest]].expires)
+            {
+                // right side is expiring soonest
+                smallest = right;
+            }
 
-        slot->id = ctr;
-        slot->handler = h;
-        slot->opaque = opaque;
-        slot->start = start;
-        slot->expires = expires;
-        slot->repeat = repeat;
+            if (smallest != slot)
+            {
+                swap(slot, smallest);
+                // loop again with slot set to where the smallest was
+                slot = smallest;
+            }
+            else
+            {
+                done = true;
+            }
+        }
+    }
 
-        return slot;
+    inline void
+    swap(int a, int b)
+    {
+#ifdef TIMER_DEBUG
+        Serial.print("\tswap ");
+        Serial.print(a);
+        Serial.print("<->");
+        Serial.println(b);
+#endif
+        size_t tmp = heap[a];
+        heap[a] = heap[b];
+        heap[b] = tmp;
     }
 };
 
