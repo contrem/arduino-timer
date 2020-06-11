@@ -47,24 +47,25 @@
 
 template <
     size_t max_tasks = TIMER_MAX_TASKS, /* max allocated tasks */
-    unsigned long (*time_func)() = millis /* time function for timer */
+    unsigned long (*time_func)() = millis, /* time function for timer */
+    typename T = void * /* handler argument type */
 >
 class Timer {
   public:
 
     typedef uintptr_t Task; /* public task handle */
-    typedef bool (*handler_t)(void *opaque); /* task handler func signature */
+    typedef bool (*handler_t)(T opaque); /* task handler func signature */
 
     /* Calls handler with opaque as argument in delay units of time */
     Task
-    in(unsigned long delay, handler_t h, void *opaque = NULL)
+    in(unsigned long delay, handler_t h, T opaque = T())
     {
         return task_id(add_task(time_func(), delay, h, opaque));
     }
 
     /* Calls handler with opaque as argument at time */
     Task
-    at(unsigned long time, handler_t h, void *opaque = NULL)
+    at(unsigned long time, handler_t h, T opaque = T())
     {
         const unsigned long now = time_func();
         return task_id(add_task(now, time - now, h, opaque));
@@ -72,7 +73,7 @@ class Timer {
 
     /* Calls handler with opaque as argument every interval units of time */
     Task
-    every(unsigned long interval, handler_t h, void *opaque = NULL)
+    every(unsigned long interval, handler_t h, T opaque = T())
     {
         return task_id(add_task(time_func(), interval, h, opaque, interval));
     }
@@ -129,7 +130,7 @@ class Timer {
 
     struct task {
         handler_t handler; /* task handler callback func */
-        void *opaque; /* argument given to the callback handler */
+        T opaque; /* argument given to the callback handler */
         unsigned long start,
                       expires; /* when the task expires */
         size_t repeat, /* repeat task */
@@ -141,7 +142,7 @@ class Timer {
     remove(struct task *task)
     {
         task->handler = NULL;
-        task->opaque = NULL;
+        task->opaque = T();
         task->start = 0;
         task->expires = 0;
         task->repeat = 0;
@@ -172,7 +173,7 @@ class Timer {
     inline
     struct task *
     add_task(unsigned long start, unsigned long expires,
-             handler_t h, void *opaque, bool repeat = 0)
+             handler_t h, T opaque, bool repeat = 0)
     {
         struct task * const slot = next_task_slot();
 
