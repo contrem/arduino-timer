@@ -15,6 +15,7 @@ Or using the *Timer* constructors for different task limits / time resolution
 ```cpp
 Timer<10> timer; // 10 concurrent tasks, using millis as resolution
 Timer<10, micros> timer; // 10 concurrent tasks, using micros as resolution
+Timer<10, micros, int> timer; // 10 concurrent tasks, using micros as resolution, with handler argument of type int
 ```
 
 Call *timer*.**tick()** in the loop function
@@ -65,33 +66,36 @@ timer.in(1000, [](void *argument) -> bool { return argument; }, argument);
 
 ```cpp
 /* Constructors */
-/* Create a timer object with default settings - millis resolution, TIMER_MAX_TASKS (=16) task slots */
+/* Create a timer object with default settings:
+   millis resolution, TIMER_MAX_TASKS (=16) task slots, T = void *
+*/
 Timer<> timer_create_default(); // auto timer = timer_create_default();
 
 /* Create a timer with max_tasks slots and time_func resolution */
-Timer<size_t max_tasks = TIMER_MAX_TASKS, unsigned long (*time_func)(void) = millis> timer;
+Timer<size_t max_tasks = TIMER_MAX_TASKS, unsigned long (*time_func)(void) = millis, typename T = void *> timer;
 Timer<> timer; // Equivalent to: auto timer = timer_create_default()
 Timer<10> timer; // Timer with 10 task slots
 Timer<10, micros> timer; // timer with 10 task slots and microsecond resolution
+Timer<10, micros, int> timer; // timer with 10 task slots, microsecond resolution, and handler argument type int
 
-/* Signature for handler functions */
-bool handler(void *argument);
+/* Signature for handler functions - T = void * by default */
+bool handler(T argument);
 
 /* Timer Methods */
 /* Ticks the timer forward, returns the ticks until next event, or 0 if none */
-unsigned int tick(); // call this function in loop()
+unsigned long tick(); // call this function in loop()
 
 /* Calls handler with opaque as argument in delay units of time */
 Timer<>::Task
-in(unsigned long delay, handler_t handler, void *opaque = NULL);
+in(unsigned long delay, handler_t handler, T opaque = T());
 
 /* Calls handler with opaque as argument at time */
 Timer<>::Task
-at(unsigned long time, handler_t handler, void *opaque = NULL);
+at(unsigned long time, handler_t handler, T opaque = T());
 
 /* Calls handler with opaque as argument every interval units of time */
 Timer<>::Task
-every(unsigned long interval, handler_t handler, void *opaque = NULL);
+every(unsigned long interval, handler_t handler, T opaque = T());
 
 /* Cancel a timer task */
 void cancel(Timer<>::Task &task);
