@@ -6,7 +6,7 @@ Simple *non-blocking* timer library for calling functions **in / at / every** sp
 
 Include the library and create a *Timer* instance.
 ```cpp
-#include <timer.h>
+#include <arduino-timer.h>
 
 auto timer = timer_create_default();
 ```
@@ -105,7 +105,7 @@ void cancel(Timer<>::Task &task);
 
 [Check out the instructions](https://www.arduino.cc/en/Guide/Libraries) from Arduino.
 
-**OR** copy **src/timer.h** into your project folder *(you won't get managed updates this way)*.
+**OR** copy **src/arduino-timer.h** into your project folder *(you won't get managed updates this way)*.
 
 ### Examples
 
@@ -114,7 +114,7 @@ Found in the **examples/** folder.
 The simplest example, blinking an LED every second *(from examples/blink)*:
 
 ```cpp
-#include <timer.h>
+#include <arduino-timer.h>
 
 auto timer = timer_create_default(); // create a timer with default settings
 
