@@ -2,7 +2,7 @@
  Test timer rollover handling
  */
 
-#include <timer.h>
+#include <arduino-timer.h>
 
 unsigned long wrapping_millis();
 
