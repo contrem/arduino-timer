@@ -10,7 +10,7 @@
  *
  */
 
-#include <timer.h>
+#include <arduino-timer.h>
 
 auto timer = timer_create_default(); // create a timer with default settings
 Timer<> default_timer; // save as above
