@@ -16,15 +16,20 @@ auto timer = timer_create_default(); // create a timer with default settings
 Timer<> default_timer; // save as above
 
 // create a timer that can hold 1 concurrent task, with microsecond resolution
-Timer<1, micros> u_timer;
+// and a custom handler type of 'const char *
+Timer<1, micros, const char *> u_timer;
+
+
+// create a timer that holds 16 tasks, with millisecond resolution,
+// and a custom handler type of 'const char *
+Timer<16, millis, const char *> t_timer;
 
 bool toggle_led(void *) {
   digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN)); // toggle the LED
   return true; // repeat? true
 }
 
-bool print_message(void *msg) {
-  const char *m = (const char *)msg;
+bool print_message(const char *m) {
   Serial.print("print_message: ");
   Serial.println(m);
   return true; // repeat? true
@@ -54,22 +59,22 @@ void setup() {
 
   // call the print_message function every 1000 millis (1 second),
   // passing it an argument string
-  timer.every(1000, print_message, (void *)"called every second");
+  t_timer.every(1000, print_message, "called every second");
 
   // call the print_message function in five seconds
-  timer.in(5000, print_message, (void *)"delayed five seconds");
+  t_timer.in(5000, print_message, "delayed five seconds");
 
   // call the print_message function at time + 10 seconds
-  timer.at(millis() + 10000, print_message, (void *)"call at millis() + 10 seconds");
+  t_timer.at(millis() + 10000, print_message, "call at millis() + 10 seconds");
 
   // call the toggle_led function every 500 millis (half second)
   auto task = timer.every(500, toggle_led);
   timer.cancel(task); // this task is now cancelled, and will not run
 
   // call print_message in 2 seconds, but with microsecond resolution
-  u_timer.in(2000000, print_message, (void *)"delayed two seconds using microseconds");
+  u_timer.in(2000000, print_message, "delayed two seconds using microseconds");
 
-  if (!u_timer.in(5000, print_message, (void *)"never printed")) {
+  if (!u_timer.in(5000, print_message, "never printed")) {
   /* this fails because we created u_timer with only 1 concurrent task slot */
     Serial.println("Failed to add microsecond event - timer full");
   }
@@ -77,5 +82,6 @@ void setup() {
 
 void loop() {
   timer.tick(); // tick the timer
+  t_timer.tick();
   u_timer.tick();
 }
