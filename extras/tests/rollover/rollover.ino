@@ -3,7 +3,7 @@
  */
 
 #include <util/atomic.h>
-#include <timer.h>
+#include <arduino-timer.h>
 
 auto timer = timer_create_default();
 

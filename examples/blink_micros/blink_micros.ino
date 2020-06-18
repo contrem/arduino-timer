@@ -5,7 +5,7 @@
  *
  */
 
-#include <timer.h>
+#include <arduino-timer.h>
 
 Timer<1, micros> timer; // create a timer with 1 task and microsecond resolution
 
