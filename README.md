@@ -56,6 +56,23 @@ auto task = timer.in(delay, function_to_call);
 timer.cancel(task);
 ```
 
+To **clear** all of *Tasks*.
+```cpp
+timer.in(delay, function_to_call);
+timer.clear();
+```
+
+Check the total number of active timer tasks is 0.
+```cpp
+timer.is_empty();
+```
+
+Check the timer contains the timer tasks.
+```cpp
+auto task = timer.in(delay, function_to_call);
+timer.contains(task);
+```
+
 Be fancy with **lambdas**
 ```cpp
 timer.in(1000, [](void*) -> bool { return false; });
@@ -99,6 +116,15 @@ every(unsigned long interval, handler_t handler, T opaque = T());
 
 /* Cancel a timer task */
 void cancel(Timer<>::Task &task);
+
+/* Cancel all of the timer tasks from this timer */
+void clear();
+
+/* Returns true if, and only if, the total number of active timer tasks is 0 */
+bool is_empty();
+
+/* Returns true if and only if this timer contains the specified timer task */
+bool contains(Timer<>::Task &task);
 ```
 
 ### Installation

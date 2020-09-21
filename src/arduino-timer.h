@@ -87,13 +87,52 @@ class Timer {
         for (size_t i = 0; i < max_tasks; ++i) {
             struct task * const t = &tasks[i];
 
-            if (t->handler && (t->id ^ task) == (uintptr_t)t) {
+            if (!is_empty_slot(t) && (t->id ^ task) == (uintptr_t)t) {
                 remove(t);
                 break;
             }
         }
 
         task = (Task)NULL;
+    }
+
+    /* Cancel all of the timer tasks from this timer */
+    void
+    clear()
+    {
+        for (size_t i = 0; i < max_tasks; ++i) {
+            struct task * const t = &tasks[i];
+            remove(t);
+        }
+    }
+
+    /* Returns true if, and only if, the total number of active timer tasks is 0 */
+    bool
+    is_empty()
+    {
+        for (size_t i = 0; i < max_tasks; ++i) {
+            struct task * const t = &tasks[i];
+            if (!is_empty_slot(t)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /* Returns true if and only if this timer contains the specified timer task */
+    bool
+    contains(Task &task)
+    {
+        if (!task) return false;
+
+        for (size_t i = 0; i < max_tasks; ++i) {
+            struct task * const t = &tasks[i];
+            if (!is_empty_slot(t) && (t->id ^ task) == (uintptr_t)t) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /* Ticks the timer forward - call this function in loop() */
@@ -105,7 +144,7 @@ class Timer {
         for (size_t i = 0; i < max_tasks; ++i) {
             struct task * const task = &tasks[i];
 
-            if (task->handler) {
+            if (!is_empty_slot(task)) {
                 const unsigned long t = time_func();
                 const unsigned long duration = t - task->start;
 
@@ -164,7 +203,7 @@ class Timer {
     {
         for (size_t i = 0; i < max_tasks; ++i) {
             struct task * const slot = &tasks[i];
-            if (slot->handler == NULL) return slot;
+            if (is_empty_slot(slot)) return slot;
         }
 
         return NULL;
@@ -189,6 +228,13 @@ class Timer {
         slot->repeat = repeat;
 
         return slot;
+    }
+
+    inline
+    bool
+    is_empty_slot(struct task * const slot)
+    {
+        return slot->handler == NULL;
     }
 };
 
