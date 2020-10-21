@@ -21,7 +21,7 @@ jobs:
 
     - name: test platforms
       #run: python3 ci/build_platform.py main_platforms
-      run: python3 ci/build_platform.py all_platforms
+      run: python3 ci/build_platform.py main_platforms esp32 esp8266 nrf52840
 
     #- name: doxygen
       #env:
