@@ -100,7 +100,8 @@ class Timer {
     unsigned long
     tick()
     {
-        unsigned long ticks = (unsigned long)-1;
+        unsigned long ticks = (unsigned long)-1, elapsed;
+        const unsigned long start = time_func();
 
         for (size_t i = 0; i < max_tasks; ++i) {
             struct task * const task = &tasks[i];
@@ -112,8 +113,10 @@ class Timer {
                 if (duration >= task->expires) {
                     task->repeat = task->handler(task->opaque) && task->repeat;
 
-                    if (task->repeat) task->start = t;
-                    else remove(task);
+                    if (task->repeat) {
+                        task->start = t;
+                        ticks = task->expires < ticks ? task->expires : ticks;
+                    } else remove(task);
                 } else {
                     const unsigned long remaining = task->expires - duration;
                     ticks = remaining < ticks ? remaining : ticks;
@@ -121,7 +124,12 @@ class Timer {
             }
         }
 
-        return ticks == (unsigned long)-1 ? 0 : ticks;
+        elapsed = time_func() - start;
+
+        if (elapsed >= ticks || ticks == (unsigned long)-1) ticks = 0;
+        else ticks -= elapsed;
+
+        return ticks;
     }
 
   private:
