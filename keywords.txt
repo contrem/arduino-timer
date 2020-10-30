@@ -18,6 +18,7 @@ in	KEYWORD2
 at	KEYWORD2
 every	KEYWORD2
 tick	KEYWORD2
+ticks	KEYWORD2
 cancel	KEYWORD2
 
 #######################################
