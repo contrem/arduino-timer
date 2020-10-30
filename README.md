@@ -99,6 +99,9 @@ every(unsigned long interval, handler_t handler, T opaque = T());
 
 /* Cancel a timer task */
 void cancel(Timer<>::Task &task);
+
+/* Returns the ticks until next event, or 0 if none */
+unsigned long ticks();
 ```
 
 ### Installation
