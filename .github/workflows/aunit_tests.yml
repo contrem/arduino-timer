@@ -1,0 +1,25 @@
+name: arduino-timer unit tests
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup
+      run: |
+        cd ..
+        git clone https://github.com/bxparks/UnixHostDuino
+        git clone https://github.com/bxparks/AUnit
+    - name: Build Tests
+      run: |
+        make -C extras/tests
+    - name: Run Tests
+      run: |
+        make -C extras/tests
+        make -C extras/tests runtests
+
