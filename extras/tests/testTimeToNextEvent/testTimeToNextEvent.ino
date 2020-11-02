@@ -10,10 +10,9 @@
 class DummyTask {
   public:
     DummyTask(int runTime, bool repeats = true):
-      busyTime(runTime), numRuns(0), timeOfLastRun(0), repeat(repeats)
+      busyTime(runTime), repeat(repeats)
     {
-      Serial.print("DummyTask at: ");
-      Serial.println((int) this, HEX);
+      reset();
     };
 
     int busyTime;
@@ -29,39 +28,56 @@ class DummyTask {
     };
 
     // run a task as an object method
-    static bool run(void * aDummy) {
-      DummyTask * aTask = (DummyTask *) aDummy;
-      Serial.print("DummyTask at: ");
-      Serial.println((int) aDummy, HEX);
-      
+    static bool runATask(void * aDummy)
+    {
+      DummyTask * aTask = static_cast<DummyTask *>(aDummy);
       return aTask->run();
     };
 
+    void reset(void) {
+      timeOfLastRun = 0;
+      numRuns = 0;
+    };
 };
 
+// timer doesn't work as a local var; too big for the stack?
+// Since it's not on the stack it's harder to guarantee it starts empty after the first test()
+Timer<> timer;
 
 //////////////////////////////////////////////////////////////////////////////
 test(delayToNextEvent) {
-  Timer<> timer;
+
   DummyTask dt_3millisec(3);
   DummyTask dt_5millisec(5);
 
-  timer.every( 7, DummyTask::run, &dt_3millisec);
-  timer.every(11, DummyTask::run, &dt_5millisec);
+  timer.every( 7, DummyTask::runATask, static_cast<void *>(&dt_3millisec));
+  timer.every(11, DummyTask::runATask, static_cast<void *>(&dt_5millisec));
 
   int start = millis();
 
   int aWait = timer.ticks();  // time to next active task
-  assertEqual(aWait, 0);  // run tasks NOW!
+  assertEqual(aWait, 7);  // earliest task
 
-  aWait = timer.tick();   // both tasks ran?
+  aWait = timer.tick();   // no tasks ran?
   int firstRunTime = millis() - start;
-  assertEqual(firstRunTime, 8);
-  //
-  //  assertEqual(aWait, 0);  // short task needs to run again
-  //
-  //  aWait = timer.tick(); // run one pending task
-  //  assertEqual(aWait, 11 - 7);
+  assertEqual(firstRunTime, 0);
+
+  delay(aWait);
+  int firstActiveRunStart = millis();
+  aWait = timer.tick();
+  int firstTaskRunTime = millis() - firstActiveRunStart;
+  assertEqual(firstTaskRunTime, 3);
+  assertEqual(aWait, (11 - 7 - 3)); // other pending task
+
+  // run some tasks; count them.
+  while (millis() < start + 1000) {
+    aWait = timer.tick();
+    delay(aWait);
+  }
+
+  // expected numbers? the other task may cause some missed deadlines
+  assertNear(dt_3millisec.numRuns, 100, 2); // 7+ millisecs apart (ideally 142 runs)
+  assertNear(dt_5millisec.numRuns, 90, 4); // 11+ millisecs apart (ideally 90 runs)
 
 };
 
