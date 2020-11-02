@@ -121,13 +121,13 @@ class Timer {
 
     /* Ticks until the next event */
     unsigned long
-    ticks()
+    ticks() const
     {
         unsigned long ticks = (unsigned long)-1, elapsed;
         const unsigned long start = time_func();
 
         for (size_t i = 0; i < max_tasks; ++i) {
-            struct task * const task = &tasks[i];
+            const struct task * const task = &tasks[i];
 
             if (task->handler) {
                 const unsigned long t = time_func();
