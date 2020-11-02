@@ -115,8 +115,12 @@ class Timer {
                 }
             }
         }
-
+   
+    #if defined(ARDUINO_TIMER_NO_TICK_REPORT)
+        return 0;
+    #else
         return ticks();
+    #endif
     }
 
     /* Ticks until the next event */
