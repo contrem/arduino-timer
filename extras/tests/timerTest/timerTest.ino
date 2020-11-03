@@ -3,6 +3,13 @@
 //
 // Confirm arduino-timer behaves as expected.
 
+// UnixHostDuino emulation needs this include
+// (not picked up "for free" by Arduino IDE)
+//
+#include <Arduino.h>
+//
+// also, you need to provide your own forward references
+
 
 // These tests depend on the Arduino "AUnit" library
 #include <AUnit.h>
