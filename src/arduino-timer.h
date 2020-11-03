@@ -102,7 +102,7 @@ class Timer {
     {
         for (size_t i = 0; i < max_tasks; ++i) {
             struct task * const t = &tasks[i];
-	    remove(t);
+            remove(t);
         }
     }
 
