@@ -56,6 +56,11 @@ auto task = timer.in(delay, function_to_call);
 timer.cancel(task);
 ```
 
+To **cancel** all *Task*s
+```cpp
+timer.cancel();
+```
+
 Be fancy with **lambdas**
 ```cpp
 timer.in(1000, [](void*) -> bool { return false; });
@@ -99,6 +104,8 @@ every(unsigned long interval, handler_t handler, T opaque = T());
 
 /* Cancel a timer task */
 void cancel(Timer<>::Task &task);
+/* Cancel all tasks */
+void cancel();
 
 /* Returns the ticks until next event, or 0 if none */
 unsigned long ticks();
