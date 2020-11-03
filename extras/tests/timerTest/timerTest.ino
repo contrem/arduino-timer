@@ -7,6 +7,14 @@
 // (not picked up "for free" by Arduino IDE)
 //
 #include <Arduino.h>
+
+// fake it for UnixHostDuino emulation
+#if defined(UNIX_HOST_DUINO)
+#  ifndef ARDUINO
+#  define ARDUINO 100
+#  endif
+#endif
+
 //
 // also, you need to provide your own forward references
 
