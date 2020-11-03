@@ -96,6 +96,16 @@ class Timer {
         task = (Task)NULL;
     }
 
+    /* Cancel all timer tasks */
+    void
+    cancel()
+    {
+        for (size_t i = 0; i < max_tasks; ++i) {
+            struct task * const t = &tasks[i];
+            remove(t);
+        }
+    }
+
     /* Ticks the timer forward - call this function in loop() */
     unsigned long
     tick()
