@@ -1,5 +1,3 @@
-
-//not needed: #line 2 "testTimer.ino"
 // 
 // testTimer.ino
 //
@@ -90,7 +88,7 @@ bool no_op(void *) {
 Timer<MAXTASKS, simMillis> timer;
 
 void prepForTests(void) {
-  timer.cancelAll();
+  timer.cancel();
   simTime = 0;
 }
 
