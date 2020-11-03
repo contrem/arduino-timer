@@ -1,4 +1,4 @@
-name: arduino-timer AUnit Tests
+name: arduino-timer unit test check
 
 on: [push]
 
