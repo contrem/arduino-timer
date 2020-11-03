@@ -100,6 +100,13 @@ class Timer {
     unsigned long
     tick()
     {
+        tick<void>();
+        return ticks();
+    }
+
+    template <typename R> void
+    tick()
+    {
         for (size_t i = 0; i < max_tasks; ++i) {
             struct task * const task = &tasks[i];
 
@@ -115,8 +122,6 @@ class Timer {
                 }
             }
         }
-
-        return ticks();
     }
 
     /* Ticks until the next event */
