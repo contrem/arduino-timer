@@ -2,6 +2,6 @@
 # Makefile to compile and run Arduino programs natively on Linux or MacOS.
 
 APP_NAME := timerTest
-#ARDUINO_LIBS := AUnit arduino-timer
-ARDUINO_LIBS := AUnit
+ARDUINO_LIBS := AUnit arduino-timer
+#ARDUINO_LIBS := AUnit
 include ../../../../UnixHostDuino/UnixHostDuino.mk
