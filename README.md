@@ -56,7 +56,7 @@ auto task = timer.in(delay, function_to_call);
 timer.cancel(task);
 ```
 
-To **cancel all tasks**
+To **cancel all pending tasks**
 ```cpp
 timer.cancelAll();
 ```
