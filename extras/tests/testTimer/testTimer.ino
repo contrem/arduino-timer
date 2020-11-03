@@ -1,9 +1,25 @@
 
-//#line 2 "testTimer.ino"
+//not needed: #line 2 "testTimer.ino"
+// 
+// testTimer.ino
+//
+// Confirm arduino-timer behaves as expected.
 
-// depends on the Arduino "AUnit" library
+
+// These tests depend on the Arduino "AUnit" library
 #include <AUnit.h>
 #include <arduino-timer.h>
+
+////////////////////////////////////////////////////////
+// You really want to be simulating time, rather than
+// forcing tests to slow down. 
+// This simulation works across different processor families.
+//
+// BE CAREFUL to use delay() and millis() ONLY WHEN YOU MEAN IT!
+//
+// this namespace collision should help you make it more clear what you get
+//
+namespace simulateTime {
 
 ////////////////////////////////////////////////////////
 // Simulate delays and elapsed time
@@ -16,22 +32,16 @@ void simDelay(unsigned long delayTime) {
   simTime += delayTime;
 }
 
-////////////////////////////////////////////////////////
-// You really want to be simulating time, rather than
-// forcing tests to slow down.
-// be careful to use delay() and millis() ONLY WHEN YOU MEAN IT!
-//
-// this namespace collision should help you make it more clear what you get
+// TRAP ambiguous calls to delay() and millis() that are NOT simulated
+void delay(unsigned long delayTime) {
+  simDelay(delayTime);
+}
+unsigned long millis(void) {
+  return simMillis();
+}
 
-namespace simulateTime {
-  void delay(unsigned long delayTime) {
-    simDelay(delayTime);
-  }
-  unsigned long millis(void) {
-    return simMillis();
-  }
-};
-using namespace simulateTime;
+}; // namespace simulateTime
+using namespace simulateTime; // detect ambiguous function calls
 
 
 ////////////////////////////////////////////////////////
@@ -79,44 +89,173 @@ bool no_op(void *) {
 #define MAXTASKS 5
 Timer<MAXTASKS, simMillis> timer;
 
-//// really want timers to support this for reset after a test
-//void timerCancelAll(void) {
-//  //return timer.cancelAll();
-//
-//  static int sizeOfATask = 0;
-//  static Timer<>::Task firstTask = 0;
-//  
-//  if(sizeOfATask == 0) {  
-//    // first time through; calculate start & sizeof tasks.
-//    // ...this might break if Timer implementation changes.
-//    //
-//    firstTask = timer.in(4, no_op);
-//    auto secondTask = timer.in(5,no_op);
-//    sizeOfATask = secondTask - firstTask;
-//
-//    Serial.print("size of a task is ");
-//    Serial.println(sizeOfATask);
-//  }
-//
-//  // cancel all timers
-//  for(int i = 0; i < MAXTASKS; i++) {
-//    auto aTask = firstTask + (i + sizeOfATask);
-//    timer.cancel( aTask );
-//  }
-//}
-
 void prepForTests(void) {
   timer.cancelAll();
   simTime = 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////
-test(delayToNextEvent) {
+// confirm tasks can be cancelled.
+test(timer_cancelTasks) {
   prepForTests();
+
+  int aWait = timer.ticks();  // time to next active task
+  assertEqual(aWait, 0);  // no tasks!
 
   DummyTask dt_3millisec(3);
   DummyTask dt_5millisec(5);
- 
+  DummyTask dt_7millisec(7);
+
+  auto inTask = timer.in(13, DummyTask::runATask, &dt_3millisec);
+  auto atTask = timer.at(17, DummyTask::runATask, &dt_5millisec);
+  auto everyTask = timer.every(19, DummyTask::runATask, &dt_7millisec);
+
+  aWait = timer.ticks();
+  assertEqual(aWait, 13); // inTask delay
+
+  timer.cancel(inTask);
+  aWait = timer.ticks();
+  assertEqual(aWait, 17); // atTask delay
+
+  timer.cancel(atTask);
+  aWait = timer.ticks();
+  assertEqual(aWait, 19); // everyTask delay
+
+  timer.cancel(everyTask);
+  aWait = timer.ticks();
+  assertEqual(aWait, 0); // no tasks! all canceled
+};
+
+//////////////////////////////////////////////////////////////////////////////
+// confirm timer.at() behaviors
+//
+test(timer_at) {
+  prepForTests();
+
+  int aWait = timer.ticks();  // time to next active task
+  assertEqual(aWait, 0);  // no tasks!
+  assertEqual(simMillis(), 0ul);
+
+  DummyTask waste_3ms(3);
+
+  const int atTime = 17;
+  const int lateStart = 4;
+  simDelay(lateStart);
+
+  auto atTask = timer.at(atTime, DummyTask::runATask, &waste_3ms);
+
+  aWait = timer.tick();
+  assertEqual(aWait, atTime - lateStart);
+  assertEqual(waste_3ms.numRuns, 0);
+
+  for (int i = lateStart + 1; i < atTime; i++ ) {
+    simDelay(1);
+    aWait = timer.tick();
+    assertEqual(waste_3ms.numRuns, 0);  // still waiting
+  }
+
+  simDelay(1);
+  aWait = timer.tick();
+  assertEqual(waste_3ms.numRuns, 1);  // triggered
+  assertEqual(aWait, 0);
+
+  simDelay(1);
+  aWait = timer.tick();
+  assertEqual(waste_3ms.numRuns, 1);  // not repeating
+
+  aWait = timer.tick();
+  assertEqual(aWait, 0); // no tasks! all canceled
+};
+
+//////////////////////////////////////////////////////////////////////////////
+// confirm timer.in() behaviors
+//
+test(timer_in) {
+  prepForTests();
+
+  int aWait = timer.ticks();  // time to next active task
+  assertEqual(aWait, 0);  // no tasks!
+  assertEqual(simMillis(), 0ul);
+
+  DummyTask waste_3ms(3);
+
+  const int lateStart = 7;
+  simDelay(lateStart);
+
+  const int delayTime = 17;
+  auto atTask = timer.in(delayTime, DummyTask::runATask, &waste_3ms);
+
+  aWait = timer.tick();
+  assertEqual(aWait, delayTime);
+  assertEqual(waste_3ms.numRuns, 0);
+
+  for (int i = 1; i < delayTime; i++ ) {
+    simDelay(1);
+    aWait = timer.tick();
+    assertEqual(waste_3ms.numRuns, 0);  // still waiting
+  }
+
+  simDelay(1);
+  aWait = timer.tick();
+  assertEqual(waste_3ms.numRuns, 1);  // triggered
+  assertEqual(aWait, 0);
+
+  simDelay(1);
+  aWait = timer.tick();
+  assertEqual(waste_3ms.numRuns, 1);  // not repeating
+
+  aWait = timer.tick();
+  assertEqual(aWait, 0); // no tasks! all canceled
+};
+
+//////////////////////////////////////////////////////////////////////////////
+// confirm timer.every() behaviors
+//
+test(timer_every) {
+  prepForTests();
+
+  int aWait = timer.ticks();  // time to next active task
+  assertEqual(aWait, 0);  // no tasks!
+  assertEqual(simMillis(), 0ul);
+
+  DummyTask waste_3ms(3);
+  DummyTask waste_100ms_once(100, false);
+
+  const int lateStart = 7;
+  simDelay(lateStart);
+
+  //const int delayTime = 17;
+  auto everyTask1 = timer.every(50, DummyTask::runATask, &waste_3ms);
+  auto everyTask2 = timer.every(200, DummyTask::runATask, &waste_100ms_once);
+
+  aWait = timer.tick();
+  assertEqual(aWait, 50);
+  assertEqual(waste_3ms.numRuns, 0);
+
+  for (int i = 1; i < 1000; i++ ) {
+    simDelay(1);
+    aWait = timer.tick();
+  }
+
+  assertEqual(waste_3ms.numRuns, 22);  // triggered
+  assertEqual(waste_100ms_once.numRuns, 1);  // triggered
+
+  aWait = timer.tick();
+  assertEqual(aWait, 39); // still a repeating task
+};
+
+//////////////////////////////////////////////////////////////////////////////
+// confirm calculated delays to next event in the timer are "reasonable"
+// reported by timer.tick() and timer.ticks().
+//
+test(timer_delayToNextEvent) {
+  prepForTests();
+
+  int aWait = timer.ticks();  // time to next active task
+  assertEqual(aWait, 0);  // no tasks!
+
+  DummyTask dt_3millisec(3);
+  DummyTask dt_5millisec(5);
   timer.every( 7, DummyTask::runATask, &dt_3millisec);
   timer.every(11, DummyTask::runATask, &dt_5millisec);
 
@@ -125,7 +264,7 @@ test(delayToNextEvent) {
   int start = simMillis();
   assertEqual(start, 0);  // earliest task
 
-  int aWait = timer.ticks();  // time to next active task
+  aWait = timer.ticks();  // time to next active task
   assertEqual(aWait, 7);  // earliest task
 
   aWait = timer.tick();   // no tasks ran?
@@ -148,7 +287,6 @@ test(delayToNextEvent) {
   // expect the other task causes some missed deadlines
   assertNear(dt_3millisec.numRuns, 100, 9); // 7+ millisecs apart (ideally 142 runs)
   assertNear(dt_5millisec.numRuns, 90, 4); // 11+ millisecs apart (ideally 90 runs)
-
 };
 
 
