@@ -4,4 +4,4 @@
 APP_NAME := timerTest
 #ARDUINO_LIBS := AUnit arduino-timer
 ARDUINO_LIBS := AUnit
-include ../../../UnixHostDuino/UnixHostDuino.mk
+include ../../../../UnixHostDuino/UnixHostDuino.mk
