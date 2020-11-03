@@ -16,11 +16,14 @@ jobs:
         git clone https://github.com/bxparks/UnixHostDuino
         #git clone https://github.com/bxparks/AceCommon
         git clone https://github.com/bxparks/AUnit
-    - name: Verify examples
+    #- name: Verify examples
+      #run: |
+      #  make -C examples
+    - name: Verify extras/tests
       run: |
-        make -C examples
+        make -C extras/tests
     - name: Run tests
       run: |
-        make -C tests
-        make -C tests runtests
+        make -C extras/tests
+        make -C extras/tests runtests
 
