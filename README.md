@@ -56,6 +56,11 @@ auto task = timer.in(delay, function_to_call);
 timer.cancel(task);
 ```
 
+To **cancel all tasks**
+```cpp
+timer.cancelAll();
+```
+
 Be fancy with **lambdas**
 ```cpp
 timer.in(1000, [](void*) -> bool { return false; });
