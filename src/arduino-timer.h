@@ -45,6 +45,15 @@
     #define TIMER_MAX_TASKS 0x10
 #endif
 
+#define _timer_foreach_task(T, task) \
+    for (T task = tasks; task < tasks + max_tasks; ++task)
+
+#define timer_foreach_task(T) \
+    _timer_foreach_task(struct task *, T)
+
+#define timer_foreach_const_task(T) \
+    _timer_foreach_task(const struct task *, T)
+
 template <
     size_t max_tasks = TIMER_MAX_TASKS, /* max allocated tasks */
     unsigned long (*time_func)() = millis, /* time function for timer */
@@ -84,9 +93,7 @@ class Timer {
     {
         if (!task) return;
 
-        for (size_t i = 0; i < max_tasks; ++i) {
-            struct task * const t = &tasks[i];
-
+        timer_foreach_task(t) {
             if (t->handler && (t->id ^ task) == (uintptr_t)t) {
                 remove(t);
                 break;
@@ -100,8 +107,7 @@ class Timer {
     void
     cancel()
     {
-        for (size_t i = 0; i < max_tasks; ++i) {
-            struct task * const t = &tasks[i];
+        timer_foreach_task(t) {
             remove(t);
         }
     }
@@ -117,9 +123,7 @@ class Timer {
     template <typename R> void
     tick()
     {
-        for (size_t i = 0; i < max_tasks; ++i) {
-            struct task * const task = &tasks[i];
-
+        timer_foreach_task(task) {
             if (task->handler) {
                 const unsigned long t = time_func();
                 const unsigned long duration = t - task->start;
@@ -141,9 +145,7 @@ class Timer {
         unsigned long ticks = (unsigned long)-1, elapsed;
         const unsigned long start = time_func();
 
-        for (size_t i = 0; i < max_tasks; ++i) {
-            const struct task * const task = &tasks[i];
-
+        timer_foreach_const_task(task) {
             if (task->handler) {
                 const unsigned long t = time_func();
                 const unsigned long duration = t - task->start;
@@ -204,8 +206,7 @@ class Timer {
     struct task *
     next_task_slot()
     {
-        for (size_t i = 0; i < max_tasks; ++i) {
-            struct task * const slot = &tasks[i];
+        timer_foreach_task(slot) {
             if (slot->handler == NULL) return slot;
         }
 
@@ -240,5 +241,9 @@ timer_create_default()
 {
     return Timer<>();
 }
+
+#undef _timer_foreach_task
+#undef timer_foreach_task
+#undef timer_foreach_const_task
 
 #endif
