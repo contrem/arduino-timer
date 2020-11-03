@@ -96,9 +96,9 @@ class Timer {
         task = (Task)NULL;
     }
 
-    /* Cancel ALL timer tasks -- useful for testing */
+    /* Cancel all timer tasks */
     void
-    cancelAll(void)
+    cancel()
     {
         for (size_t i = 0; i < max_tasks; ++i) {
             struct task * const t = &tasks[i];
