@@ -1,4 +1,4 @@
-// 
+//
 // timerTest.ino
 //
 // Confirm arduino-timer behaves as expected.
@@ -25,7 +25,7 @@
 
 ////////////////////////////////////////////////////////
 // You really want to be simulating time, rather than
-// forcing tests to slow down. 
+// forcing tests to slow down.
 // This simulation works across different processor families.
 //
 // BE CAREFUL to use delay() and millis() ONLY WHEN YOU MEAN IT!
