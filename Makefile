@@ -6,3 +6,6 @@ $(NAME)-$(VERSION).zip:
 
 tag:
 	git tag $(VERSION)
+
+test:
+	$(MAKE) -C extras/tests/ test

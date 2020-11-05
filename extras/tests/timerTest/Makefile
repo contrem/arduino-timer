@@ -5,4 +5,5 @@
 APP_NAME := timerTest
 ARDUINO_LIBS := AUnit arduino-timer
 CPPFLAGS += -Werror
-include ../../../../UnixHostDuino/UnixHostDuino.mk
+
+include $(UNIXHOSTDUINO)
