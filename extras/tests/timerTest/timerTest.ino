@@ -4,7 +4,7 @@
 // Confirm arduino-timer behaves as expected.
 
 // UnixHostDuino emulation needs this include
-// (not picked up "for free" by Arduino IDE)
+// (it's not picked up "for free" by Arduino IDE)
 //
 #include <Arduino.h>
 
@@ -17,7 +17,6 @@
 
 //
 // also, you need to provide your own forward references
-
 
 // These tests depend on the Arduino "AUnit" library
 #include <AUnit.h>
@@ -54,7 +53,8 @@ unsigned long millis(void) {
 }
 
 }; // namespace simulateTime
-using namespace simulateTime; // detect ambiguous function calls
+
+using namespace simulateTime; // and detect ambiguous function calls
 
 
 ////////////////////////////////////////////////////////
@@ -98,7 +98,9 @@ bool no_op(void *) {
 }
 
 // timer doesn't work as a local var; too big for the stack?
-// Since it's not on the stack it's harder to guarantee it starts empty after the first test()
+// Since it's not on the stack it's harder to guarantee it starts empty
+// after the first test()
+//
 #define MAXTASKS 5
 Timer<MAXTASKS, simMillis> timer;
 
@@ -155,7 +157,10 @@ test(timer_at) {
   const int lateStart = 4;
   simDelay(lateStart);
 
-  auto atTask = timer.at(atTime, DummyTask::runATask, &waste_3ms);
+  // Note timer.at() returns the task ID.
+  // Keep it to modify the task later.
+  //
+  timer.at(atTime, DummyTask::runATask, &waste_3ms);
 
   aWait = timer.tick();
   assertEqual(aWait, atTime - lateStart);
@@ -196,7 +201,7 @@ test(timer_in) {
   simDelay(lateStart);
 
   const int delayTime = 17;
-  auto atTask = timer.in(delayTime, DummyTask::runATask, &waste_3ms);
+  timer.in(delayTime, DummyTask::runATask, &waste_3ms);
 
   aWait = timer.tick();
   assertEqual(aWait, delayTime);
@@ -238,8 +243,8 @@ test(timer_every) {
   simDelay(lateStart);
 
   //const int delayTime = 17;
-  auto everyTask1 = timer.every(50, DummyTask::runATask, &waste_3ms);
-  auto everyTask2 = timer.every(200, DummyTask::runATask, &waste_100ms_once);
+  timer.every(50, DummyTask::runATask, &waste_3ms);
+  timer.every(200, DummyTask::runATask, &waste_100ms_once);
 
   aWait = timer.tick();
   assertEqual(aWait, 50);
@@ -264,8 +269,8 @@ test(timer_every) {
 test(timer_delayToNextEvent) {
   prepForTests();
 
-  int aWait = timer.ticks();  // time to next active task
-  assertEqual(aWait, 0);  // no tasks!
+  unsigned long aWait = timer.ticks();  // time to next active task
+  assertEqual(aWait, 0ul);  // no tasks!
 
   DummyTask dt_3millisec(3);
   DummyTask dt_5millisec(5);
@@ -274,32 +279,38 @@ test(timer_delayToNextEvent) {
 
   assertEqual(dt_3millisec.numRuns, 0);
 
-  int start = simMillis();
-  assertEqual(start, 0);  // earliest task
+  unsigned long start = simMillis();
+  assertEqual(start, 0ul);  // earliest task
 
   aWait = timer.ticks();  // time to next active task
-  assertEqual(aWait, 7);  // earliest task
+  assertEqual(aWait, 7ul);  // earliest task
 
   aWait = timer.tick();   // no tasks ran?
-  int firstRunTime = simMillis() - start;
-  assertEqual(firstRunTime, 0);
+  unsigned long firstRunTime = simMillis() - start;
+  assertEqual(firstRunTime, 0ul);
 
   simDelay(aWait);
-  int firstActiveRunStart = simMillis();
+  unsigned long firstActiveRunStart = simMillis();
   aWait = timer.tick();
-  int firstTaskRunTime = simMillis() - firstActiveRunStart;
-  assertEqual(firstTaskRunTime, 3);
-  assertEqual(aWait, (11 - 7 - 3)); // other pending task
+  unsigned long firstTaskRunTime = simMillis() - firstActiveRunStart;
+  assertEqual(firstTaskRunTime, 3ul);
+  assertEqual(aWait, (unsigned long) (11 - 7 - 3)); // other pending task
 
   // run some tasks; count them.
-  while (simMillis() < start + 1000) {
+  while (simMillis() < start + 1000ul) {
     aWait = timer.tick();
+    if(aWait == 0) {
+      aWait = 1;  // at least one millisec
+    }
     simDelay(aWait);
   }
 
   // expect the other task causes some missed deadlines
-  assertNear(dt_3millisec.numRuns, 100, 9); // 7+ millisecs apart (ideally 142 runs)
-  assertNear(dt_5millisec.numRuns, 90, 4); // 11+ millisecs apart (ideally 90 runs)
+  assertNear(dt_3millisec.numRuns, 100, 9); // 7+ millisecs apart
+  // (ideally 142 runs)
+
+  assertNear(dt_5millisec.numRuns, 90, 4); // 11+ millisecs apart
+  // (ideally 90 runs)
 };
 
 
