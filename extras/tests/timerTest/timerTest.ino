@@ -67,9 +67,9 @@ class DummyTask {
       reset();
     };
 
-    int busyTime;
+    unsigned long busyTime;
     int numRuns;
-    int timeOfLastRun;
+    unsigned long timeOfLastRun;
     bool repeat;
 
     bool run(void) {
