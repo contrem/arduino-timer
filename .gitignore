@@ -4,3 +4,6 @@
 Doxyfile*
 doxygen_sqlite3.db
 html
+*.out
+*.o
+*.swp

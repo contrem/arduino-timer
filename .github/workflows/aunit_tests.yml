@@ -1,0 +1,19 @@
+name: arduino-timer unit tests
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build
+      run: |
+        make -C extras/tests
+    - name: Run
+      run: |
+        make -C extras/tests runtests
+
