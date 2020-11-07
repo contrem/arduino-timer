@@ -168,6 +168,8 @@ class Timer {
         return ticks;
     }
 
+    Timer() : ctr(0), tasks{} {}
+
   private:
 
     size_t ctr;
