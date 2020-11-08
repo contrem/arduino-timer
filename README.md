@@ -67,6 +67,23 @@ timer.in(1000, [](void*) -> bool { return false; });
 timer.in(1000, [](void *argument) -> bool { return argument; }, argument);
 ```
 
+Getting the number of **ticks** until the next *Task*
+```cpp
+auto ticks = timer.ticks(); // usefull for sleeping until the next task
+```
+```cpp
+void loop {
+    auto ticks = timer.tick(); // returns the number of ticks
+}
+```
+
+Avoiding **ticks** calculation inside of **tick**
+```cpp
+void loop {
+    timer.tick<void>(); // avoids ticks() calculation
+}
+```
+
 ### API
 
 ```cpp

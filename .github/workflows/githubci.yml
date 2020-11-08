@@ -1,4 +1,4 @@
-name: arduino-timer library build permutation check
+name: arduino-timer platform builds
 
 on: [pull_request, push, repository_dispatch]
 

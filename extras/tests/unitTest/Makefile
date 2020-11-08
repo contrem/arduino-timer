@@ -2,7 +2,7 @@
 # Makefile to compile and run Arduino programs natively on Linux or MacOS.
 #
 
-APP_NAME := timerTest
+APP_NAME := unitTest
 ARDUINO_LIBS := AUnit arduino-timer
 CPPFLAGS += -Werror
 
