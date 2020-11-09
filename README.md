@@ -61,6 +61,16 @@ To **cancel** all *Task*s
 timer.cancel();
 ```
 
+Check if a timer is **empty** - no active *Task*s
+```cpp
+if (timer.empty()) { /* no active tasks */ }
+```
+
+Get the number of active *Task*s
+```cpp
+auto active_tasks = timer.size();
+```
+
 Be fancy with **lambdas**
 ```cpp
 timer.in(1000, [](void*) -> bool { return false; });
@@ -126,6 +136,12 @@ void cancel();
 
 /* Returns the ticks until next event, or 0 if none */
 unsigned long ticks();
+
+/* Number of active tasks in the timer */
+size_t size() const;
+
+/* True if there are no active tasks */
+bool empty() const;
 ```
 
 ### Installation
