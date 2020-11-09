@@ -181,6 +181,17 @@ class Timer {
         return s;
     }
 
+    /* True if there are no active tasks */
+    bool
+    empty() const
+    {
+        timer_foreach_const_task(task) {
+            if (task->handler) return false;
+        }
+
+        return true;
+    }
+
     Timer() : ctr(0), tasks{} {}
 
   private:
