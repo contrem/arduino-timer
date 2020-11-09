@@ -360,6 +360,49 @@ test(timer_ticks) {
     assertEqual(big, timer.ticks()); // big pending again
 }
 
+test(timer_size) {
+    pre_test();
+
+    Timer<0x2, CLOCK::millis, Task *> timer;
+
+    assertEqual(timer.size(), 0UL);
+
+    auto t = make_task();
+
+    auto r = timer.in(0UL, handler, &t);
+
+    assertNotEqual((unsigned long)r, 0UL);
+    assertEqual(timer.size(), 1UL);
+
+    r = timer.in(0UL, handler, &t);
+
+    assertNotEqual((unsigned long)r, 0UL);
+    assertEqual(timer.size(), 2UL);
+
+    timer.cancel();
+
+    assertEqual(timer.size(), 0UL);
+}
+
+test(timer_empty) {
+    pre_test();
+
+    Timer<0x1, CLOCK::millis, Task *> timer;
+
+    assertEqual(timer.empty(), true);
+
+    auto t = make_task();
+
+    auto r = timer.in(0UL, handler, &t);
+
+    assertNotEqual((unsigned long)r, 0UL);
+    assertEqual(timer.empty(), false);
+
+    timer.cancel();
+
+    assertEqual(timer.empty(), true);
+}
+
 test(timer_rollover_every) {
     pre_test();
 
