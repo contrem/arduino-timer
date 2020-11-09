@@ -168,6 +168,19 @@ class Timer {
         return ticks;
     }
 
+    /* Number of active tasks in the timer */
+    size_t
+    size() const
+    {
+        size_t s = 0;
+
+        timer_foreach_const_task(task) {
+            if (task->handler) ++s;
+        }
+
+        return s;
+    }
+
     Timer() : ctr(0), tasks{} {}
 
   private:
