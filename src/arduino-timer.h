@@ -35,11 +35,7 @@
 #ifndef _CM_ARDUINO_TIMER_H__
 #define _CM_ARDUINO_TIMER_H__
 
-#if defined(ARDUINO) && ARDUINO >= 100
 #include <Arduino.h>
-#else
-#include <WProgram.h>
-#endif
 
 #include <limits.h>
 
