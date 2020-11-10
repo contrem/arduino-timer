@@ -94,7 +94,7 @@ class Timer {
         if (!task) return;
 
         timer_foreach_task(t) {
-            if (t->handler && (t->id ^ task) == (uintptr_t)t) {
+            if (t->handler && (t->id ^ task) == (Task)t) {
                 remove(t);
                 break;
             }
