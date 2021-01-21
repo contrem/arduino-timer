@@ -20,6 +20,8 @@ every	KEYWORD2
 tick	KEYWORD2
 ticks	KEYWORD2
 cancel	KEYWORD2
+size	KEYWORD2
+empty	KEYWORD2
 
 #######################################
 # Instances (KEYWORD2)
