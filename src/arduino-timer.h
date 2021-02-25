@@ -100,7 +100,7 @@ class Timer {
             }
         }
 
-        task = (Task)NULL;
+        task = static_cast<Task>(NULL);
     }
 
     /* Cancel all timer tasks */
@@ -223,7 +223,7 @@ class Timer {
     Task
     task_id(const struct task * const t)
     {
-        const Task id = (Task)t;
+        const Task id = reinterpret_cast<Task>(t);
 
         return id ? id ^ t->id : id;
     }
