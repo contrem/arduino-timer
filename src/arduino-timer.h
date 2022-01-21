@@ -114,6 +114,30 @@ class Timer {
         }
     }
 
+    /* Left until the task ends */
+    unsigned long
+    ticks(const Task &task)
+	{
+        auto lft = 0ul;
+        if (!task)
+            return lft;
+
+        timer_foreach_task(t) {
+            if (t->handler && task_id(t) == task) {
+                const unsigned long now = time_func();
+                const unsigned long duration = now - t->start;
+
+                if (duration >= t->expires)
+                    break;
+
+                lft = t->expires - duration;
+                break;
+            }
+        }
+
+        return lft;
+    }
+
     /* Ticks the timer forward - call this function in loop() */
     unsigned long
     tick()
