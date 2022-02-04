@@ -116,8 +116,8 @@ class Timer {
 
     /* Left until the task ends */
     unsigned long
-    ticks(const Task &task)
-	{
+    left(const Task &task)
+    {
         auto lft = 0ul;
         if (!task)
             return lft;
@@ -127,10 +127,8 @@ class Timer {
                 const unsigned long now = time_func();
                 const unsigned long duration = now - t->start;
 
-                if (duration >= t->expires)
-                    break;
-
-                lft = t->expires - duration;
+                if (duration < t->expires)
+                    lft = t->expires - duration;
                 break;
             }
         }
