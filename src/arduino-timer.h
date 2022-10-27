@@ -131,10 +131,14 @@ class Timer {
                 const unsigned long duration = t - task->start;
 
                 if (duration >= task->expires) {
-                    task->repeat = task->handler(task->opaque) && task->repeat;
+                    Task activeId = task_id(task);
+                    bool repeating = task->repeat;
+                    repeating &= task->handler(task->opaque);
 
-                    if (task->repeat) task->start = t;
-                    else remove(task);
+                    if (activeId == task_id(task)) {
+                        if (repeating) task->start = t;
+                        else remove(task);
+                    }
                 }
             }
         }

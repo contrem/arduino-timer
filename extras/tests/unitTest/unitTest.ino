@@ -310,6 +310,65 @@ test(timer_cancel_all) {
     assertEqual(task.runs, 0UL);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// support for in-task cancel check
+bool tickA(void *);
+bool tickB(void *);
+
+unsigned long ticksA = 0;
+unsigned long ticksB = 0;
+Timer<0x5, CLOCK::millis, void *> *myTimer = 0;
+Timer<0x5, CLOCK::millis, void *>::Task pendingTask = 0;
+
+bool tickA(void *) {
+    ticksA++;
+    if (myTimer) {
+        myTimer->cancel(pendingTask);
+        pendingTask = myTimer->in(1, tickB);  // A then B
+    }
+    return false;
+}
+bool tickB(void *) {
+    ticksB++;
+    if (myTimer) {
+        myTimer->cancel(pendingTask);
+        pendingTask = myTimer->in(1, tickA);  // B then A
+    }
+    return false;
+}
+
+test(timer_cancel_in_task) {
+    pre_test();
+
+    Timer<0x5, CLOCK::millis, void *> timer;
+    myTimer = &timer;
+
+    pendingTask = timer.in(1, tickA);
+
+    // task added
+    assertNotEqual((unsigned long)pendingTask, 0UL);
+    // pending tasks/time
+    assertEqual((size_t)1, timer.size());
+    assertEqual(1UL, timer.ticks());
+
+    // tasks have not run
+    assertEqual(ticksA, 0UL);
+    assertEqual(ticksB, 0UL);
+
+    static const unsigned long maxTicks = 10;
+    for (unsigned long i = 0; i < maxTicks; i++) {
+        CLOCK::tick();
+        timer.tick();
+    }
+
+    myTimer = 0;
+    // tasks alternated?
+    assertEqual(ticksA, maxTicks / 2);
+    assertEqual(ticksB, maxTicks / 2);
+
+    assertEqual((size_t)1, timer.size());  // no extra tasks
+}
+
 test(timer_ticks) {
     pre_test();
 
