@@ -114,6 +114,28 @@ class Timer {
         }
     }
 
+    /* Left until the task ends */
+    unsigned long
+    left(const Task &task) const
+    {
+        auto lft = 0ul;
+        if (!task)
+            return lft;
+
+        timer_foreach_const_task(t) {
+            if (t->handler && task_id(t) == task) {
+                const unsigned long now = time_func();
+                const unsigned long duration = now - t->start;
+
+                if (duration < t->expires)
+                    lft = t->expires - duration;
+                break;
+            }
+        }
+
+        return lft;
+    }
+
     /* Ticks the timer forward - call this function in loop() */
     unsigned long
     tick()
@@ -223,7 +245,7 @@ class Timer {
 
     inline
     Task
-    task_id(const struct task * const t)
+    task_id(const struct task * const t) const
     {
         const Task id = reinterpret_cast<Task>(t);
 
