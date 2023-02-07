@@ -86,13 +86,18 @@ class Timer {
     }
 
     /* Cancel the timer task */
-    void
+    bool
     cancel(Task &task)
     {
         struct task * const t = static_cast<struct task * const>(task);
-        if (t) remove(t);
 
-        task = static_cast<Task>(NULL);
+        if (t) {
+            remove(t);
+            task = static_cast<Task>(NULL);
+            return true;
+        }
+
+        return false;
     }
 
     /* Cancel all timer tasks */
