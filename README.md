@@ -130,7 +130,7 @@ Timer<>::Task
 every(unsigned long interval, handler_t handler, T opaque = T());
 
 /* Cancel a timer task */
-void cancel(Timer<>::Task &task);
+bool cancel(Timer<>::Task &task);
 /* Cancel all tasks */
 void cancel();
 
