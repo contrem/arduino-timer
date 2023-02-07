@@ -262,7 +262,10 @@ test(timer_cancel) {
     // assert task has not run
     assertEqual(task.runs, 0UL);
 
-    timer.cancel(r);
+    const bool success = timer.cancel(r);
+
+    // assert task found
+    assertEqual(success, true);
 
     // assert task cleared
     assertEqual((unsigned long)r, 0UL);
@@ -275,6 +278,11 @@ test(timer_cancel) {
     // assert task did not run
     assertEqual(timer.tick(), 0UL);
     assertEqual(task.runs, 0UL);
+
+    const bool fail = timer.cancel(r);
+
+    // assert task not found
+    assertEqual(fail, false);
 }
 
 test(timer_cancel_all) {
