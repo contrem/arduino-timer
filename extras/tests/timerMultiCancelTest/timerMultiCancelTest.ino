@@ -55,14 +55,14 @@ bool createTask(int index) {
     // cancel task in slot
     auto staleId = taskInfo.id;
     int beforeSize = (int)timer.size();
-    timer.cancel(taskInfo.id);
+    successful &= timer.cancel(taskInfo.id);
     int afterSize = (int)timer.size();
     successful &= (afterSize == beforeSize - 1);
     if (!successful) {
       Serial.println(F("could not cancel a task"));
     } else {
 
-      timer.cancel(staleId);  // double cancel should not hit another task
+      successful &= !timer.cancel(staleId);  // double cancel should not hit another task
       int afterSize2 = (int)timer.size();
       successful &= (afterSize2 == beforeSize - 1);
       if (!successful) {

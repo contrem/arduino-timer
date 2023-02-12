@@ -262,6 +262,7 @@ test(timer_cancel) {
     // assert task has not run
     assertEqual(task.runs, 0UL);
 
+    auto stale_r = r;
     const bool success = timer.cancel(r);
 
     // assert task found
@@ -283,6 +284,10 @@ test(timer_cancel) {
 
     // assert task not found
     assertEqual(fail, false);
+
+    // stale task pointer has nothing to cancel
+    const bool stale_cancel_fail = timer.cancel(stale_r);
+    assertEqual(stale_cancel_fail, false);
 }
 
 test(timer_cancel_all) {
@@ -373,23 +378,23 @@ test(timer_size) {
 
     Timer<0x2, CLOCK::millis, Task *> timer;
 
-    assertEqual(timer.size(), 0UL);
+    assertEqual((unsigned long) timer.size(), 0UL);
 
     auto t = make_task();
 
     auto r = timer.in(0UL, handler, &t);
 
     assertNotEqual((unsigned long)r, 0UL);
-    assertEqual(timer.size(), 1UL);
+    assertEqual((unsigned long) timer.size(), 1UL);
 
     r = timer.in(0UL, handler, &t);
 
     assertNotEqual((unsigned long)r, 0UL);
-    assertEqual(timer.size(), 2UL);
+    assertEqual((unsigned long) timer.size(), 2UL);
 
     timer.cancel();
 
-    assertEqual(timer.size(), 0UL);
+    assertEqual((unsigned long) timer.size(), 0UL);
 }
 
 test(timer_empty) {
