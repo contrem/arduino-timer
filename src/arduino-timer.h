@@ -91,7 +91,7 @@ class Timer {
     {
         struct task * const t = static_cast<struct task * const>(task);
 
-        if (t) {
+        if (t && (tasks <= t) && (t < tasks + max_tasks) && t->handler) {
             remove(t);
             task = static_cast<Task>(NULL);
             return true;
