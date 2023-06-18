@@ -43,7 +43,7 @@ struct TaskInfo {
 
 static const int numTaskIds = 20;
 
-TaskInfo tasksToCancel[numTaskIds] = { 0 };
+TaskInfo tasksToCancel[numTaskIds] = { { 0, 0 } };
 
 unsigned long creationAttempts = 0;
 
